@@ -42,7 +42,7 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 ## Design principles
 
 - **Corpus-preferring grounding** — retrieved documents are the primary source of truth. General knowledge is allowed but flagged with a warning prefix so consumers can distinguish.
-- **Citation validation by code, not by the LLM** — ragpipe parses `[doc_id:chunk_id]` citations from model output and validates them against the retrieved set. Hallucinated references are stripped.
+- **Citation validation by code, not by the LLM** — ragpipe parses `[doc_id:chunk_id]` citations from model output and validates them against the retrieved set. Hallucinated references are stripped from non-streaming responses; streaming responses are validated post-hoc and invalid citations are logged.
 - **Grounding classification** — every response is classified as `corpus`, `general`, or `mixed`, available in `rag_metadata` for downstream consumers.
 - **Text-free audit logging** — grounding decisions are logged without echoing document text or user queries, safe for compliance-sensitive environments.
 - **Separation of concerns** — ingestion, retrieval, inference, and testing are independent services. Swap any component without touching the others.
