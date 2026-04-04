@@ -40,9 +40,14 @@ jobs:
             rag-postgres-ci
           # Wait for Postgres to be ready
           for i in $(seq 1 30); do
-            if pg_isready -h localhost -p 5432 -U ragsuite 2>/dev/null; then
+            if docker exec postgres pg_isready -U ragsuite 2>/dev/null; then
               echo "Postgres is ready"
               break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Postgres failed to start"
+              docker logs postgres
+              exit 1
             fi
             sleep 1
           done

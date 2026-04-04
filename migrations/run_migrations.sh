@@ -39,8 +39,10 @@ PSQL_ARGS="$DB_URL -v ON_ERROR_STOP=1 -v retention_days=$RETENTION_DAYS"
 # so pipe the SQL content via stdin instead of using -f.
 run_sql() {
     if command -v psql >/dev/null 2>&1; then
+        # shellcheck disable=SC2086
         psql $PSQL_ARGS -f "$1"
     else
+        # shellcheck disable=SC2086
         podman exec -i "$PG_CONTAINER" sh -c "psql $PSQL_ARGS" < "$1"
     fi
 }

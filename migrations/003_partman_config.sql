@@ -41,15 +41,18 @@ SET
 WHERE parent_table = 'public.query_log';
 
 -- Only schedule the cron job if it does not already exist.
+-- Uses schedule_in_database() to explicitly target the current database,
+-- so the job runs correctly regardless of cron.database_name configuration.
 DO $migration$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM cron.job WHERE jobname = 'query_log_retention'
     ) THEN
-        PERFORM cron.schedule(
+        PERFORM cron.schedule_in_database(
             'query_log_retention',
             '0 2 * * *',
-            $cmd$SELECT partman.run_maintenance(p_jobmon := false)$cmd$
+            $cmd$SELECT partman.run_maintenance(p_jobmon := false)$cmd$,
+            current_database()
         );
     END IF;
 END

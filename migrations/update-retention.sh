@@ -18,10 +18,10 @@ case "$DAYS" in
     ''|*[!0-9]*|0) echo "ERROR: QUERY_LOG_RETENTION_DAYS must be a positive integer (>= 1)" >&2; exit 1 ;;
 esac
 
-psql "$DB_URL" -v ON_ERROR_STOP=1 <<SQL
+psql "$DB_URL" -v ON_ERROR_STOP=1 -v days="$DAYS" <<'SQL'
 UPDATE partman.part_config
 SET
-    retention = '${DAYS} days',
+    retention = :'days' || ' days',
     retention_keep_table = false,
     retention_keep_index = false
 WHERE parent_table = 'public.query_log';
