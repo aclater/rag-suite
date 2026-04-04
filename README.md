@@ -46,7 +46,7 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 - **Grounding classification** — every response is classified as `corpus`, `general`, or `mixed`, available in `rag_metadata` for downstream consumers.
 - **Text-free audit logging** — grounding decisions are logged without echoing document text or user queries, safe for compliance-sensitive environments.
 - **Separation of concerns** — ingestion, retrieval, inference, and testing are independent services. Swap any component without touching the others.
-- **Semantic routing** — ragpipe classifies queries and routes them to different LLMs, vector collections, and document stores per security domain. A medical corpus and a finance corpus can share the same endpoint without cross-contamination.
+- **Semantic routing** — ragpipe classifies queries and routes them to different LLMs, vector collections, and document stores per routing domain. A medical corpus and a finance corpus can share the same endpoint with separate retrieval pipelines.
 
 ## Quick start
 
