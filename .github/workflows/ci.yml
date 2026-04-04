@@ -18,39 +18,27 @@ jobs:
   test-migrations:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://ragsuite:ragsuite@localhost:5432/ragsuite
+      DATABASE_URL: postgresql://litellm:litellm@localhost:5432/litellm
+    services:
+      postgres:
+        image: quay.io/sclorg/postgresql-16-c9s
+        env:
+          POSTGRESQL_USER: litellm
+          POSTGRESQL_PASSWORD: litellm
+          POSTGRESQL_DATABASE: litellm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U litellm -d litellm"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Build Postgres image with pg_partman and pg_cron
-        run: |
-          docker build -t rag-postgres-ci -f Containerfile.postgres .
-
-      - name: Start Postgres service container
-        run: |
-          docker run -d --name postgres \
-            -p 5432:5432 \
-            -e POSTGRES_USER=ragsuite \
-            -e POSTGRES_PASSWORD=ragsuite \
-            -e POSTGRES_DB=ragsuite \
-            rag-postgres-ci
-          # Wait for Postgres to be ready
-          for i in $(seq 1 30); do
-            if docker exec postgres pg_isready -U ragsuite 2>/dev/null; then
-              echo "Postgres is ready"
-              break
-            fi
-            if [ "$i" -eq 30 ]; then
-              echo "Postgres failed to start"
-              docker logs postgres
-              exit 1
-            fi
-            sleep 1
-          done
 
       - name: Install PostgreSQL client
         run: |
@@ -59,6 +47,9 @@ jobs:
 
       - name: Run migrations
         run: bash migrations/run_migrations.sh
+
+      - name: Run partition maintenance
+        run: bash migrations/maintain-partitions.sh
 
       - name: Run migration tests
         run: |

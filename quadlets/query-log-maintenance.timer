@@ -1,0 +1,13 @@
+# ~/.config/systemd/user/query-log-maintenance.timer
+# Runs query-log-maintenance.service daily at 02:00.
+# Creates upcoming partitions and drops expired ones.
+
+[Unit]
+Description=Daily query log partition maintenance
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

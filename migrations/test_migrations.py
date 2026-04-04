@@ -1,6 +1,6 @@
 """Tests for rag-suite Postgres schema migrations.
 
-Run against a live Postgres 16 instance with pg_partman and pg_cron installed.
+Run against a live Postgres 16 instance (sclorg/postgresql-16-c9s).
 Set DATABASE_URL (or DOCSTORE_URL) to the connection string.
 
     pytest test_migrations.py -v
@@ -30,10 +30,18 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="session")
 def migrated_db():
-    """Run all migrations once per session and yield the connection."""
+    """Run all migrations + maintenance once per session and yield the connection."""
+    env = {**os.environ, "DATABASE_URL": DB_URL}
     subprocess.run(
         ["bash", os.path.join(MIGRATIONS_DIR, "run_migrations.sh")],
-        env={**os.environ, "DATABASE_URL": DB_URL},
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["bash", os.path.join(MIGRATIONS_DIR, "maintain-partitions.sh")],
+        env=env,
         check=True,
         capture_output=True,
         text=True,
@@ -45,10 +53,18 @@ def migrated_db():
 
 
 def _run_migrations():
-    """Run migrations and return a fresh connection."""
+    """Run migrations + maintenance and return a fresh connection."""
+    env = {**os.environ, "DATABASE_URL": DB_URL}
     subprocess.run(
         ["bash", os.path.join(MIGRATIONS_DIR, "run_migrations.sh")],
-        env={**os.environ, "DATABASE_URL": DB_URL},
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["bash", os.path.join(MIGRATIONS_DIR, "maintain-partitions.sh")],
+        env=env,
         check=True,
         capture_output=True,
         text=True,
@@ -213,18 +229,28 @@ def test_query_log_cited_count_null_when_no_chunks(migrated_db):
 
 # -- Partitioning --
 
-def test_query_log_partitioning_exists(migrated_db):
-    """query_log should have child partitions in pg_inherits."""
+def test_query_log_is_partitioned(migrated_db):
+    """query_log should be a partitioned table."""
     cur = migrated_db.cursor()
     cur.execute(
-        "SELECT EXISTS ("
-        "  SELECT 1 FROM pg_inherits i "
-        "  JOIN pg_class c ON c.oid = i.inhrelid "
-        "  JOIN pg_class p ON p.oid = i.inhparent "
-        "  WHERE p.relname = 'query_log'"
-        ")"
+        "SELECT relkind FROM pg_class WHERE relname = 'query_log'"
     )
-    assert cur.fetchone()[0] is True
+    # 'p' = partitioned table
+    assert cur.fetchone()[0] == "p"
+
+
+def test_query_log_has_child_partitions(migrated_db):
+    """query_log should have child partitions created by the maintenance script."""
+    cur = migrated_db.cursor()
+    cur.execute(
+        "SELECT count(*) FROM pg_inherits i "
+        "JOIN pg_class c ON c.oid = i.inhrelid "
+        "JOIN pg_class p ON p.oid = i.inhparent "
+        "WHERE p.relname = 'query_log'"
+    )
+    count = cur.fetchone()[0]
+    # 003_create_partitions.sql creates today + 7 days = 8 partitions minimum
+    assert count >= 8
 
 
 def test_query_log_insert_routes_to_partition(migrated_db):
@@ -248,32 +274,35 @@ def test_query_log_insert_routes_to_partition(migrated_db):
     assert cur.fetchone() is not None
 
 
-# -- pg_partman config --
-
-def test_partman_config(migrated_db):
-    """partman.part_config should have correct settings for query_log."""
+def test_partition_naming_convention(migrated_db):
+    """Partitions should follow query_log_YYYYMMDD naming."""
     cur = migrated_db.cursor()
     cur.execute(
-        "SELECT partition_interval, premake, retention, retention_keep_table "
-        "FROM partman.part_config WHERE parent_table = 'public.query_log'"
+        "SELECT c.relname FROM pg_inherits i "
+        "JOIN pg_class c ON c.oid = i.inhrelid "
+        "JOIN pg_class p ON p.oid = i.inhparent "
+        "WHERE p.relname = 'query_log' "
+        "ORDER BY c.relname LIMIT 1"
     )
-    row = cur.fetchone()
-    assert row is not None
-    assert row[0] == "1 day"
-    assert row[1] == 7
-    assert row[2] == "30 days"
-    assert row[3] is False
+    name = cur.fetchone()[0]
+    assert name.startswith("query_log_")
+    # The date portion should be 8 digits
+    date_part = name.replace("query_log_", "")
+    assert len(date_part) == 8
+    assert date_part.isdigit()
 
 
-# -- pg_cron --
-
-def test_pg_cron_scheduled(migrated_db):
-    """cron.job should have the retention job registered."""
-    cur = migrated_db.cursor()
-    cur.execute(
-        "SELECT EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'query_log_retention')"
-    )
-    assert cur.fetchone()[0] is True
+def test_maintenance_is_idempotent(migrated_db):
+    """Running maintain-partitions.sh twice must succeed."""
+    env = {**os.environ, "DATABASE_URL": DB_URL}
+    for _ in range(2):
+        result = subprocess.run(
+            ["bash", os.path.join(MIGRATIONS_DIR, "maintain-partitions.sh")],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
 
 
 # -- FK behavior --
@@ -317,4 +346,8 @@ def test_migration_order():
         f for f in os.listdir(MIGRATIONS_DIR)
         if f.endswith(".sql") and f[0].isdigit()
     )
-    assert files == ["001_collections.sql", "002_query_log.sql", "003_partman_config.sql"]
+    assert files == [
+        "001_collections.sql",
+        "002_query_log.sql",
+        "003_create_partitions.sql",
+    ]

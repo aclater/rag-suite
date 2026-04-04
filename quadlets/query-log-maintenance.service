@@ -1,0 +1,13 @@
+# ~/.config/systemd/user/query-log-maintenance.service
+# Runs partition maintenance for query_log: creates upcoming partitions,
+# drops expired ones. Triggered daily by query-log-maintenance.timer.
+
+[Unit]
+Description=Query log partition maintenance
+After=postgres.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/llm-stack/env
+Environment=DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm
+ExecStart=/bin/sh %h/git/rag-suite/migrations/maintain-partitions.sh

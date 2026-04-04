@@ -1,30 +1,30 @@
 #!/bin/sh
-# update-retention.sh — Change the query_log retention window post-deployment.
-# Reads DATABASE_URL (or falls back to DOCSTORE_URL).
-# Reads QUERY_LOG_RETENTION_DAYS (default: 30).
-# Idempotent: safe to re-run at any time.
+# update-retention.sh — Change the query_log retention window.
+#
+# Retention is enforced by maintain-partitions.sh (run daily via systemd timer).
+# This script validates the new value and runs an immediate maintenance pass
+# so expired partitions are dropped without waiting for the next timer tick.
+#
+# Environment:
+#   DATABASE_URL               — Postgres connection string (required)
+#   DOCSTORE_URL               — Fallback if DATABASE_URL is unset
+#   QUERY_LOG_RETENTION_DAYS   — New retention window in days (required)
 set -eu
 
-DB_URL="${DATABASE_URL:-${DOCSTORE_URL:-}}"
-if [ -z "$DB_URL" ]; then
-    echo "ERROR: DATABASE_URL or DOCSTORE_URL must be set" >&2
+DAYS="${QUERY_LOG_RETENTION_DAYS:-}"
+if [ -z "$DAYS" ]; then
+    echo "ERROR: QUERY_LOG_RETENTION_DAYS must be set" >&2
+    echo "Usage: QUERY_LOG_RETENTION_DAYS=90 bash update-retention.sh" >&2
     exit 1
 fi
 
-DAYS="${QUERY_LOG_RETENTION_DAYS:-30}"
-
-# Validate DAYS is a positive integer (>= 1)
 case "$DAYS" in
     ''|*[!0-9]*|0) echo "ERROR: QUERY_LOG_RETENTION_DAYS must be a positive integer (>= 1)" >&2; exit 1 ;;
 esac
 
-psql "$DB_URL" -v ON_ERROR_STOP=1 -v days="$DAYS" <<'SQL'
-UPDATE partman.part_config
-SET
-    retention = :'days' || ' days',
-    retention_keep_table = false,
-    retention_keep_index = false
-WHERE parent_table = 'public.query_log';
-SQL
+echo "Retention set to ${DAYS} days."
+echo "Running immediate maintenance pass to drop newly expired partitions..."
 
-echo "Retention updated to ${DAYS} days."
+# Delegate to maintain-partitions.sh which reads the same env var
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+exec sh "$SCRIPT_DIR/maintain-partitions.sh"

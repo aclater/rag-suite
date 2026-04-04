@@ -3,15 +3,17 @@
 Postgres schema migrations for the RAG suite. Applied once per Postgres
 instance and consumed by all services (ragpipe, ragstuffer).
 
+Runs on `quay.io/sclorg/postgresql-16-c9s` — no additional extensions required.
+
 ## Quick Start
 
 ```bash
 # Local deployment (runs inside the postgres container via podman exec)
-DATABASE_URL=postgresql://postgres:litellm@127.0.0.1:5432/litellm \
+DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm \
   bash migrations/run_migrations.sh
 
 # CI / remote deployment
-DATABASE_URL=postgresql://superuser:pass@host/db \
+DATABASE_URL=postgresql://user:pass@host/db \
   bash migrations/run_migrations.sh
 ```
 
@@ -21,10 +23,54 @@ DATABASE_URL=postgresql://superuser:pass@host/db \
 |---|---|
 | `001_collections.sql` | Collection registry (`collections` table) |
 | `002_query_log.sql` | Query log with partitioning (`query_log` table) |
-| `003_partman_config.sql` | pg_partman + pg_cron setup, retention config |
-| `run_migrations.sh` | Applies all `NNN_*.sql` files in order (three-digit prefix) |
-| `update-retention.sh` | Change `QUERY_LOG_RETENTION_DAYS` post-deployment |
+| `003_create_partitions.sql` | Creates initial daily partitions (today + 7 days) |
+| `run_migrations.sh` | Applies all `NNN_*.sql` files in order |
+| `maintain-partitions.sh` | Creates upcoming partitions, drops expired ones |
+| `update-retention.sh` | Change retention and run immediate maintenance |
 | `test_migrations.py` | pytest suite — runs against a live Postgres instance |
+
+## Partitioning
+
+`query_log` is range-partitioned by `created_at` with daily granularity.
+Partitions follow the naming convention `query_log_YYYYMMDD`.
+
+Partition lifecycle is managed by `maintain-partitions.sh`, run daily
+via a systemd timer:
+
+- **Creates** partitions for the next 7 days (configurable via `QUERY_LOG_PREMAKE_DAYS`)
+- **Drops** partitions older than 30 days (configurable via `QUERY_LOG_RETENTION_DAYS`)
+
+The initial migration (`003_create_partitions.sql`) creates today + 7 days
+of partitions so the table is usable immediately after `run_migrations.sh`.
+
+### Installing the systemd timer
+
+Copy the service and timer units from `quadlets/`:
+
+```bash
+cp quadlets/query-log-maintenance.service ~/.config/systemd/user/
+cp quadlets/query-log-maintenance.timer   ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now query-log-maintenance.timer
+```
+
+Or add them to your `llm-stack.sh install` workflow.
+
+## Retention Configuration
+
+The retention window defaults to 30 days. To change it:
+
+```bash
+QUERY_LOG_RETENTION_DAYS=90 \
+DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm \
+  bash migrations/update-retention.sh
+```
+
+This runs an immediate maintenance pass so expired partitions are dropped
+without waiting for the next timer tick.
+
+To change the default permanently, set `QUERY_LOG_RETENTION_DAYS` in
+`~/.config/llm-stack/env`.
 
 ## Adding a New Migration
 
@@ -35,23 +81,6 @@ DATABASE_URL=postgresql://superuser:pass@host/db \
 4. Run `run_migrations.sh` locally to verify idempotency.
 5. Add tests to `test_migrations.py`.
 
-## Retention Configuration
-
-The query log retention window is set during initial migration via
-`QUERY_LOG_RETENTION_DAYS` (default: 30). To change it after deployment:
-
-```bash
-QUERY_LOG_RETENTION_DAYS=90 bash migrations/update-retention.sh
-```
-
-Or update `partman.part_config` directly:
-
-```sql
-UPDATE partman.part_config
-SET retention = '90 days'
-WHERE parent_table = 'public.query_log';
-```
-
 ## Rollback
 
 Migrations are additive only. To roll back, drop the affected objects and
@@ -60,20 +89,14 @@ re-run migrations:
 ```sql
 DROP TABLE IF EXISTS query_log CASCADE;
 DROP TABLE IF EXISTS collections CASCADE;
-DROP EXTENSION IF EXISTS pg_cron;
-DROP EXTENSION IF EXISTS pg_partman;
-DROP SCHEMA IF EXISTS partman CASCADE;
 ```
 
 Then re-run `run_migrations.sh`.
 
 ## Prerequisites
 
-- Postgres 16
-- `pg_partman` extension (installed in the container image)
-- `pg_cron` extension (installed in the container image)
-- `shared_preload_libraries = 'pg_cron'` in postgresql.conf
-- `cron.database_name` set to the application database name
+- Postgres 16 (`quay.io/sclorg/postgresql-16-c9s`)
+- No additional extensions required
 
 ## Known Technical Debt
 
