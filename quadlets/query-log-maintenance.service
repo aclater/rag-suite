@@ -9,5 +9,6 @@ After=postgres.service
 [Service]
 Type=oneshot
 EnvironmentFile=%h/.config/llm-stack/env
-Environment=DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm
+# Credentials sourced from ragstack.env — provides DATABASE_URL
+EnvironmentFile=%h/.config/llm-stack/ragstack.env
 ExecStart=/bin/sh %h/git/rag-suite/migrations/maintain-partitions.sh

@@ -68,8 +68,9 @@ all services. See [migrations/README.md](migrations/README.md) for details.
 ### Running migrations
 
 ```bash
-DATABASE_URL=postgresql://postgres:litellm@127.0.0.1:5432/litellm \
-  bash migrations/run_migrations.sh
+# Source credentials (see ~/.config/llm-stack/ragstack.env)
+source ~/.config/llm-stack/ragstack.env
+bash migrations/run_migrations.sh
 ```
 
 ## Tech stack

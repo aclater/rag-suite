@@ -8,11 +8,13 @@ Runs on `quay.io/sclorg/postgresql-16-c9s` — no additional extensions required
 ## Quick Start
 
 ```bash
-# Local deployment (runs inside the postgres container via podman exec)
-DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm \
-  bash migrations/run_migrations.sh
+# Source credentials (see ~/.config/llm-stack/ragstack.env)
+source ~/.config/llm-stack/ragstack.env
 
-# CI / remote deployment
+# Local deployment
+bash migrations/run_migrations.sh
+
+# Or pass DATABASE_URL explicitly
 DATABASE_URL=postgresql://user:pass@host/db \
   bash migrations/run_migrations.sh
 ```
@@ -61,8 +63,8 @@ Or add them to your `llm-stack.sh install` workflow.
 The retention window defaults to 30 days. To change it:
 
 ```bash
+source ~/.config/llm-stack/ragstack.env
 QUERY_LOG_RETENTION_DAYS=90 \
-DATABASE_URL=postgresql://litellm:litellm@127.0.0.1:5432/litellm \
   bash migrations/update-retention.sh
 ```
 
