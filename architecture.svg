@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="system-ui, -apple-system, sans-serif" font-size="13">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #1a1a2e; }
+      .box { fill: #16213e; stroke: #e2e8f0; }
+      .box-ragpipe { fill: #1a365d; stroke: #63b3ed; }
+      .box-ragstuffer { fill: #1c3d2a; stroke: #68d391; }
+      .box-ragprobe { fill: #3d1c2a; stroke: #f687b3; }
+      .box-stack { fill: #2d2d1c; stroke: #ecc94b; }
+      .box-external { fill: #1c1c1c; stroke: #718096; }
+      .box-store { fill: #1e2a3a; stroke: #a0aec0; }
+      .text { fill: #e2e8f0; }
+      .text-dim { fill: #a0aec0; }
+      .text-accent { fill: #63b3ed; }
+      .text-green { fill: #68d391; }
+      .text-pink { fill: #f687b3; }
+      .text-yellow { fill: #ecc94b; }
+      .arrow { stroke: #63b3ed; fill: #63b3ed; }
+      .arrow-green { stroke: #68d391; fill: #68d391; }
+      .arrow-pink { stroke: #f687b3; fill: #f687b3; }
+      .arrow-dim { stroke: #718096; fill: #718096; }
+      .label-bg { fill: #2d3748; }
+      .region { fill: none; stroke: #4a5568; stroke-dasharray: 6,3; }
+    }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #ffffff; }
+      .box { fill: #f7fafc; stroke: #2d3748; }
+      .box-ragpipe { fill: #ebf8ff; stroke: #3182ce; }
+      .box-ragstuffer { fill: #f0fff4; stroke: #38a169; }
+      .box-ragprobe { fill: #fff5f7; stroke: #d53f8c; }
+      .box-stack { fill: #fffff0; stroke: #b7791f; }
+      .box-external { fill: #f9f9f9; stroke: #a0aec0; }
+      .box-store { fill: #edf2f7; stroke: #718096; }
+      .text { fill: #1a202c; }
+      .text-dim { fill: #718096; }
+      .text-accent { fill: #2b6cb0; }
+      .text-green { fill: #276749; }
+      .text-pink { fill: #b83280; }
+      .text-yellow { fill: #975a16; }
+      .arrow { stroke: #3182ce; fill: #3182ce; }
+      .arrow-green { stroke: #38a169; fill: #38a169; }
+      .arrow-pink { stroke: #d53f8c; fill: #d53f8c; }
+      .arrow-dim { stroke: #a0aec0; fill: #a0aec0; }
+      .label-bg { fill: #edf2f7; }
+      .region { fill: none; stroke: #cbd5e0; stroke-dasharray: 6,3; }
+    }
+  </style>
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow"/>
+    </marker>
+    <marker id="ahg" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow-green"/>
+    </marker>
+    <marker id="ahp" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow-pink"/>
+    </marker>
+    <marker id="ahd" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow-dim"/>
+    </marker>
+  </defs>
+
+  <rect width="960" height="620" class="bg" rx="8"/>
+
+  <!-- Title -->
+  <text x="480" y="32" text-anchor="middle" font-size="18" font-weight="bold" class="text">RAG Suite</text>
+  <text x="480" y="50" text-anchor="middle" font-size="11" class="text-dim">Modular, corpus-preferring RAG stack</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- Document sources (top) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <rect x="280" y="64" width="400" height="44" rx="6" class="box-external"/>
+  <text x="480" y="82" text-anchor="middle" font-weight="600" class="text">Document sources</text>
+  <text x="373" y="98" text-anchor="middle" font-size="10" class="text-dim">Google Drive</text>
+  <text x="480" y="98" text-anchor="middle" font-size="10" class="text-dim">git repos</text>
+  <text x="580" y="98" text-anchor="middle" font-size="10" class="text-dim">web URLs</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- ragstuffer -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <line x1="480" y1="108" x2="480" y2="126" class="arrow-green" stroke-width="2" marker-end="url(#ahg)"/>
+
+  <rect x="340" y="130" width="280" height="80" rx="6" class="box-ragstuffer" stroke-width="2"/>
+  <text x="480" y="152" text-anchor="middle" font-weight="700" font-size="14" class="text-green">ragstuffer</text>
+  <text x="480" y="170" text-anchor="middle" font-size="10" class="text-dim">extract text from PDF, DOCX, PPTX, XLSX, HTML, MD</text>
+  <text x="480" y="184" text-anchor="middle" font-size="10" class="text-dim">chunk (1024/128 overlap) + embed (bge-base-en-v1.5)</text>
+  <text x="480" y="198" text-anchor="middle" font-size="10" class="text-dim">deterministic UUID5 keying + incremental updates</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- Data stores -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- ragstuffer → Postgres -->
+  <line x1="400" y1="210" x2="250" y2="260" class="arrow-green" stroke-width="1.5" marker-end="url(#ahg)"/>
+  <text x="300" y="232" text-anchor="middle" font-size="9" class="text-dim">chunks</text>
+
+  <!-- ragstuffer → Qdrant -->
+  <line x1="560" y1="210" x2="710" y2="260" class="arrow-green" stroke-width="1.5" marker-end="url(#ahg)"/>
+  <text x="660" y="232" text-anchor="middle" font-size="9" class="text-dim">vectors + refs</text>
+
+  <rect x="130" y="264" width="200" height="56" rx="6" class="box-store"/>
+  <text x="230" y="287" text-anchor="middle" font-weight="600" font-size="12" class="text">PostgreSQL</text>
+  <text x="230" y="307" text-anchor="middle" font-size="10" class="text-dim">full chunk text + metadata</text>
+
+  <rect x="630" y="264" width="200" height="56" rx="6" class="box-store"/>
+  <text x="730" y="287" text-anchor="middle" font-weight="600" font-size="12" class="text">Qdrant</text>
+  <text x="730" y="307" text-anchor="middle" font-size="10" class="text-dim">vectors + reference payloads</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- Request flow (middle) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+
+  <!-- Client -->
+  <rect x="30" y="380" width="120" height="44" rx="6" class="box-external"/>
+  <text x="90" y="400" text-anchor="middle" font-weight="600" font-size="12" class="text">Client</text>
+  <text x="90" y="414" text-anchor="middle" font-size="9" class="text-dim">Open WebUI / SDK</text>
+
+  <!-- Client → LiteLLM -->
+  <line x1="150" y1="402" x2="190" y2="402" class="arrow-dim" stroke-width="1.5" marker-end="url(#ahd)"/>
+
+  <!-- LiteLLM -->
+  <rect x="195" y="380" width="110" height="44" rx="6" class="box-external"/>
+  <text x="250" y="400" text-anchor="middle" font-weight="600" font-size="12" class="text">LiteLLM</text>
+  <text x="250" y="414" text-anchor="middle" font-size="9" class="text-dim">:4000</text>
+
+  <!-- LiteLLM → ragpipe -->
+  <line x1="305" y1="402" x2="345" y2="402" class="arrow" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- ragpipe -->
+  <rect x="350" y="350" width="280" height="104" rx="6" class="box-ragpipe" stroke-width="2"/>
+  <text x="490" y="374" text-anchor="middle" font-weight="700" font-size="14" class="text-accent">ragpipe</text>
+  <text x="490" y="392" text-anchor="middle" font-size="10" class="text-dim">classify query + select route</text>
+  <text x="490" y="406" text-anchor="middle" font-size="10" class="text-dim">search Qdrant + hydrate from Postgres</text>
+  <text x="490" y="420" text-anchor="middle" font-size="10" class="text-dim">rerank (cross-encoder) + inject context</text>
+  <text x="490" y="434" text-anchor="middle" font-size="10" class="text-dim">validate citations + classify grounding</text>
+  <text x="490" y="448" text-anchor="middle" font-size="10" class="text-dim">audit log (text-free)</text>
+
+  <!-- ragpipe → Qdrant -->
+  <line x1="610" y1="380" x2="730" y2="320" class="arrow" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="690" y="342" text-anchor="middle" font-size="9" class="text-dim">search</text>
+
+  <!-- ragpipe → Postgres -->
+  <line x1="370" y1="380" x2="270" y2="320" class="arrow" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="295" y="342" text-anchor="middle" font-size="9" class="text-dim">hydrate</text>
+
+  <!-- ragpipe → Model -->
+  <line x1="630" y1="402" x2="690" y2="402" class="arrow-dim" stroke-width="2" marker-end="url(#ahd)"/>
+
+  <!-- Model -->
+  <rect x="695" y="380" width="140" height="44" rx="6" class="box-external"/>
+  <text x="765" y="400" text-anchor="middle" font-weight="600" font-size="12" class="text">LLM</text>
+  <text x="765" y="414" text-anchor="middle" font-size="9" class="text-dim">ramalama :8080</text>
+
+  <!-- Response path (dashed, back to client) -->
+  <line x1="765" y1="424" x2="765" y2="488" class="arrow-dim" stroke-width="1" stroke-dasharray="4,2"/>
+  <line x1="765" y1="488" x2="90" y2="488" class="arrow-dim" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ahd)"/>
+  <text x="430" y="500" text-anchor="middle" font-size="9" class="text-dim">response + rag_metadata (grounding: corpus / general / mixed)</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- ragprobe (bottom left) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <rect x="100" y="510" width="260" height="70" rx="6" class="box-ragprobe" stroke-width="2"/>
+  <text x="230" y="534" text-anchor="middle" font-weight="700" font-size="14" class="text-pink">ragprobe</text>
+  <text x="230" y="550" text-anchor="middle" font-size="10" class="text-dim">66+ adversarial tests across 13 categories</text>
+  <text x="230" y="564" text-anchor="middle" font-size="10" class="text-dim">grounding quality + citation accuracy + safety</text>
+
+  <!-- ragprobe → ragpipe -->
+  <line x1="300" y1="510" x2="440" y2="454" class="arrow-pink" stroke-width="1.5" marker-end="url(#ahp)"/>
+  <text x="390" y="492" text-anchor="middle" font-size="9" class="text-pink">adversarial eval</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- framework-ai-stack (bottom right) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <rect x="570" y="510" width="280" height="70" rx="6" class="box-stack" stroke-width="2"/>
+  <text x="710" y="534" text-anchor="middle" font-weight="700" font-size="14" class="text-yellow">framework-ai-stack</text>
+  <text x="710" y="550" text-anchor="middle" font-size="10" class="text-dim">reference deployment on Fedora + Podman</text>
+  <text x="710" y="564" text-anchor="middle" font-size="10" class="text-dim">auto-tuning + systemd quadlets + SELinux</text>
+
+  <!-- framework-ai-stack dashed region indicator -->
+  <rect x="20" y="250" width="920" height="210" rx="8" class="region"/>
+  <text x="920" y="266" text-anchor="end" font-size="9" class="text-dim">deployed by framework-ai-stack</text>
+
+  <!-- Footer -->
+  <text x="480" y="607" text-anchor="middle" font-size="10" class="text-dim">github.com/aclater/rag-suite</text>
+</svg>

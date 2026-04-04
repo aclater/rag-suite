@@ -13,31 +13,7 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 
 ## How they fit together
 
-```
-                   Google Drive / git repos / web URLs
-                                |
-                           ragstuffer
-                         extract + chunk
-                          embed + index
-                           /        \
-                     Postgres       Qdrant
-                    (chunk text)  (vectors + refs)
-                           \        /
-  client ──► LiteLLM ──► ragpipe ──► model
-                          │
-                    classify query
-                    search Qdrant
-                    hydrate from Postgres
-                    rerank (cross-encoder)
-                    inject context + citations
-                    forward to LLM
-                    validate citations
-                    classify grounding
-                    emit audit log
-                          │
-                       ragprobe
-                   (adversarial eval)
-```
+![Architecture](architecture.svg)
 
 ## Design principles
 
