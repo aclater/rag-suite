@@ -107,6 +107,7 @@ def test_collections_columns(migrated_db):
     assert cols["description"] == "text"
     assert cols["created_at"] == "timestamp with time zone"
     assert cols["updated_at"] == "timestamp with time zone"
+    assert cols["source_types"] == "text"
 
 
 def test_collections_unique_name(migrated_db):
@@ -341,7 +342,7 @@ def test_gin_index_exists(migrated_db):
 # -- Migration ordering --
 
 def test_migration_order():
-    """Migration files must exist in numeric order 001, 002, 003."""
+    """Migration files must exist in numeric order 001, 002, 003, 004."""
     files = sorted(
         f for f in os.listdir(MIGRATIONS_DIR)
         if f.endswith(".sql") and f[0].isdigit()
@@ -350,4 +351,5 @@ def test_migration_order():
         "001_collections.sql",
         "002_query_log.sql",
         "003_create_partitions.sql",
+        "004_collections_source_types.sql",
     ]
