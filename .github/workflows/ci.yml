@@ -21,7 +21,8 @@ jobs:
       DATABASE_URL: postgresql://litellm:litellm@localhost:5432/litellm
     services:
       postgres:
-        image: quay.io/sclorg/postgresql-16-c9s
+        # Pinned by digest (c9s stream, 2026-04-01) — no semver tags available
+        image: quay.io/sclorg/postgresql-16-c9s@sha256:83dabb08e60b1896a8b97c0a56eabcbdc8ba4e91c70765639ea90e5e1f1a0db1
         env:
           POSTGRESQL_USER: litellm
           POSTGRESQL_PASSWORD: litellm
