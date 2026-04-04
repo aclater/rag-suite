@@ -9,6 +9,8 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 | [ragpipe](https://github.com/aclater/ragpipe) | RAG proxy — semantic routing, retrieval, reranking, citation validation, grounding classification |
 | [ragstuffer](https://github.com/aclater/ragstuffer) | Document ingestion — polls Google Drive, git repos, and web URLs; extracts, chunks, embeds, indexes |
 | [ragprobe](https://github.com/aclater/ragprobe) | Adversarial testing — 66+ tests across 13 categories for grounding quality, citation accuracy, and safety |
+| [ragwatch](https://github.com/aclater/ragwatch) | Observability — Prometheus + Grafana metrics from ragpipe, ragstuffer, and ragprobe |
+| [ragdeck](https://github.com/aclater/ragdeck) | Admin UI — single-pane management for collections, ingest, query log, probe runs, and metrics |
 | [framework-ai-stack](https://github.com/aclater/framework-ai-stack) | Reference deployment — full local stack on Fedora with Podman quadlets, auto-tuning, and systemd |
 
 ## How they fit together

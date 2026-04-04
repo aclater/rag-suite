@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="system-ui, -apple-system, sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 740" font-family="system-ui, -apple-system, sans-serif" font-size="13">
   <style>
     @media (prefers-color-scheme: dark) {
       .bg { fill: #1a1a2e; }
@@ -6,6 +6,8 @@
       .box-ragpipe { fill: #1a365d; stroke: #63b3ed; }
       .box-ragstuffer { fill: #1c3d2a; stroke: #68d391; }
       .box-ragprobe { fill: #3d1c2a; stroke: #f687b3; }
+      .box-ragwatch { fill: #3d2e1a; stroke: #f6ad55; }
+      .box-ragdeck { fill: #1a2e3d; stroke: #4fd1c5; }
       .box-stack { fill: #2d2d1c; stroke: #ecc94b; }
       .box-external { fill: #1c1c1c; stroke: #718096; }
       .box-store { fill: #1e2a3a; stroke: #a0aec0; }
@@ -14,10 +16,14 @@
       .text-accent { fill: #63b3ed; }
       .text-green { fill: #68d391; }
       .text-pink { fill: #f687b3; }
+      .text-orange { fill: #f6ad55; }
+      .text-teal { fill: #4fd1c5; }
       .text-yellow { fill: #ecc94b; }
       .arrow { stroke: #63b3ed; fill: #63b3ed; }
       .arrow-green { stroke: #68d391; fill: #68d391; }
       .arrow-pink { stroke: #f687b3; fill: #f687b3; }
+      .arrow-orange { stroke: #f6ad55; fill: #f6ad55; }
+      .arrow-teal { stroke: #4fd1c5; fill: #4fd1c5; }
       .arrow-dim { stroke: #718096; fill: #718096; }
       .label-bg { fill: #2d3748; }
       .region { fill: none; stroke: #4a5568; stroke-dasharray: 6,3; }
@@ -28,6 +34,8 @@
       .box-ragpipe { fill: #ebf8ff; stroke: #3182ce; }
       .box-ragstuffer { fill: #f0fff4; stroke: #38a169; }
       .box-ragprobe { fill: #fff5f7; stroke: #d53f8c; }
+      .box-ragwatch { fill: #fffaf0; stroke: #dd6b20; }
+      .box-ragdeck { fill: #e6fffa; stroke: #319795; }
       .box-stack { fill: #fffff0; stroke: #b7791f; }
       .box-external { fill: #f9f9f9; stroke: #a0aec0; }
       .box-store { fill: #edf2f7; stroke: #718096; }
@@ -36,10 +44,14 @@
       .text-accent { fill: #2b6cb0; }
       .text-green { fill: #276749; }
       .text-pink { fill: #b83280; }
+      .text-orange { fill: #c05621; }
+      .text-teal { fill: #285e61; }
       .text-yellow { fill: #975a16; }
       .arrow { stroke: #3182ce; fill: #3182ce; }
       .arrow-green { stroke: #38a169; fill: #38a169; }
       .arrow-pink { stroke: #d53f8c; fill: #d53f8c; }
+      .arrow-orange { stroke: #dd6b20; fill: #dd6b20; }
+      .arrow-teal { stroke: #319795; fill: #319795; }
       .arrow-dim { stroke: #a0aec0; fill: #a0aec0; }
       .label-bg { fill: #edf2f7; }
       .region { fill: none; stroke: #cbd5e0; stroke-dasharray: 6,3; }
@@ -55,12 +67,18 @@
     <marker id="ahp" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" class="arrow-pink"/>
     </marker>
+    <marker id="aho" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow-orange"/>
+    </marker>
+    <marker id="aht" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" class="arrow-teal"/>
+    </marker>
     <marker id="ahd" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" class="arrow-dim"/>
     </marker>
   </defs>
 
-  <rect width="960" height="620" class="bg" rx="8"/>
+  <rect width="960" height="740" class="bg" rx="8"/>
 
   <!-- Title -->
   <text x="480" y="32" text-anchor="middle" font-size="18" font-weight="bold" class="text">RAG Suite</text>
@@ -158,27 +176,59 @@
   <!-- ════════════════════════════════════════════════════════ -->
   <!-- ragprobe (bottom left) -->
   <!-- ════════════════════════════════════════════════════════ -->
-  <rect x="100" y="510" width="260" height="70" rx="6" class="box-ragprobe" stroke-width="2"/>
-  <text x="230" y="534" text-anchor="middle" font-weight="700" font-size="14" class="text-pink">ragprobe</text>
-  <text x="230" y="550" text-anchor="middle" font-size="10" class="text-dim">66+ adversarial tests across 13 categories</text>
-  <text x="230" y="564" text-anchor="middle" font-size="10" class="text-dim">grounding quality + citation accuracy + safety</text>
+  <rect x="30" y="520" width="240" height="56" rx="6" class="box-ragprobe" stroke-width="2"/>
+  <text x="150" y="544" text-anchor="middle" font-weight="700" font-size="14" class="text-pink">ragprobe</text>
+  <text x="150" y="560" text-anchor="middle" font-size="10" class="text-dim">66+ adversarial tests across 13 categories</text>
 
   <!-- ragprobe → ragpipe -->
-  <line x1="300" y1="510" x2="440" y2="454" class="arrow-pink" stroke-width="1.5" marker-end="url(#ahp)"/>
-  <text x="390" y="492" text-anchor="middle" font-size="9" class="text-pink">adversarial eval</text>
+  <line x1="270" y1="530" x2="440" y2="454" class="arrow-pink" stroke-width="1.5" marker-end="url(#ahp)"/>
+  <text x="370" y="502" text-anchor="middle" font-size="9" class="text-pink">adversarial eval</text>
 
   <!-- ════════════════════════════════════════════════════════ -->
-  <!-- framework-ai-stack (bottom right) -->
+  <!-- ragwatch (bottom center) -->
   <!-- ════════════════════════════════════════════════════════ -->
-  <rect x="570" y="510" width="280" height="70" rx="6" class="box-stack" stroke-width="2"/>
-  <text x="710" y="534" text-anchor="middle" font-weight="700" font-size="14" class="text-yellow">framework-ai-stack</text>
-  <text x="710" y="550" text-anchor="middle" font-size="10" class="text-dim">reference deployment on Fedora + Podman</text>
-  <text x="710" y="564" text-anchor="middle" font-size="10" class="text-dim">auto-tuning + systemd quadlets + SELinux</text>
+  <rect x="290" y="520" width="200" height="56" rx="6" class="box-ragwatch" stroke-width="2"/>
+  <text x="390" y="544" text-anchor="middle" font-weight="700" font-size="14" class="text-orange">ragwatch</text>
+  <text x="390" y="560" text-anchor="middle" font-size="10" class="text-dim">Prometheus + Grafana metrics</text>
+
+  <!-- ragwatch → ragpipe (metrics scrape) -->
+  <line x1="400" y1="520" x2="460" y2="454" class="arrow-orange" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#aho)"/>
+  <text x="445" y="492" text-anchor="middle" font-size="8" class="text-orange">metrics</text>
+
+  <!-- ragwatch → Grafana -->
+  <line x1="390" y1="576" x2="390" y2="610" class="arrow-orange" stroke-width="1.5" marker-end="url(#aho)"/>
+  <text x="340" y="596" text-anchor="middle" font-size="9" class="text-orange">dashboards</text>
+
+  <!-- Grafana -->
+  <rect x="290" y="614" width="200" height="44" rx="6" class="box-store"/>
+  <text x="390" y="640" text-anchor="middle" font-weight="600" font-size="12" class="text">Grafana</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- ragdeck (bottom right) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <rect x="510" y="520" width="200" height="56" rx="6" class="box-ragdeck" stroke-width="2"/>
+  <text x="610" y="544" text-anchor="middle" font-weight="700" font-size="14" class="text-teal">ragdeck</text>
+  <text x="610" y="560" text-anchor="middle" font-size="10" class="text-dim">Admin UI — single-pane management</text>
+
+  <!-- ragdeck → ragpipe -->
+  <line x1="520" y1="520" x2="540" y2="454" class="arrow-teal" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#aht)"/>
+  <text x="545" y="492" text-anchor="middle" font-size="8" class="text-teal">manage</text>
+
+  <!-- ragdeck → Qdrant -->
+  <line x1="660" y1="520" x2="730" y2="320" class="arrow-teal" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#aht)"/>
+  <text x="710" y="420" text-anchor="middle" font-size="8" class="text-teal">collections</text>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- framework-ai-stack (far bottom right) -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <rect x="730" y="520" width="200" height="56" rx="6" class="box-stack" stroke-width="2"/>
+  <text x="830" y="544" text-anchor="middle" font-weight="700" font-size="13" class="text-yellow">framework-ai-stack</text>
+  <text x="830" y="560" text-anchor="middle" font-size="10" class="text-dim">reference deployment</text>
 
   <!-- framework-ai-stack dashed region indicator -->
   <rect x="20" y="250" width="920" height="210" rx="8" class="region"/>
   <text x="920" y="266" text-anchor="end" font-size="9" class="text-dim">deployed by framework-ai-stack</text>
 
   <!-- Footer -->
-  <text x="480" y="607" text-anchor="middle" font-size="10" class="text-dim">github.com/aclater/rag-suite</text>
+  <text x="480" y="727" text-anchor="middle" font-size="10" class="text-dim">github.com/aclater/rag-suite</text>
 </svg>
