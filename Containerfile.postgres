@@ -1,0 +1,19 @@
+# Custom Postgres 16 image with pg_partman and pg_cron for the RAG suite.
+# Built locally and used by the postgres quadlet.
+FROM docker.io/library/postgres:16
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      postgresql-16-partman \
+      postgresql-16-cron && \
+    rm -rf /var/lib/apt/lists/*
+
+# pg_cron must be preloaded at server start.
+# The sample file covers fresh databases (initdb).
+RUN echo "shared_preload_libraries = 'pg_cron'" >> /usr/share/postgresql/postgresql.conf.sample
+
+COPY ensure-pg-cron.sh /usr/local/bin/ensure-pg-cron.sh
+RUN chmod 755 /usr/local/bin/ensure-pg-cron.sh
+
+ENTRYPOINT ["ensure-pg-cron.sh"]
+CMD ["postgres"]

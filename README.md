@@ -50,6 +50,26 @@ cp targets.yaml.example targets.yaml   # point at your ragpipe instance
 npx promptfoo eval
 ```
 
+## Shared Postgres schema
+
+The `migrations/` directory contains Postgres schema migrations shared across
+all services. See [migrations/README.md](migrations/README.md) for details.
+
+### Tables
+
+| Table | Purpose | Owner |
+|---|---|---|
+| `chunks` | Document chunk text (created by ragstuffer, read by ragpipe) | ragstuffer / ragpipe |
+| `collections` | Authoritative collection registry | All services |
+| `query_log` | Query observability, partitioned by day | ragpipe (writes) |
+
+### Running migrations
+
+```bash
+DATABASE_URL=postgresql://postgres:litellm@127.0.0.1:5432/litellm \
+  bash migrations/run_migrations.sh
+```
+
 ## Tech stack
 
 - **Runtime**: Python (ragpipe, ragstuffer), Node.js (ragprobe), Bash (framework-ai-stack)
