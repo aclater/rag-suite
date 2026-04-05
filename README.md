@@ -4,14 +4,61 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 
 ## Components
 
-| Repo | What it does |
-|------|-------------|
-| [ragpipe](https://github.com/aclater/ragpipe) | RAG proxy — semantic routing, retrieval, reranking, citation validation, grounding classification |
-| [ragstuffer](https://github.com/aclater/ragstuffer) | Document ingestion — polls Google Drive, git repos, and web URLs; extracts, chunks, embeds, indexes |
-| [ragprobe](https://github.com/aclater/ragprobe) | Adversarial testing — 66+ tests across 13 categories for grounding quality, citation accuracy, and safety |
-| [ragwatch](https://github.com/aclater/ragwatch) | Observability — Prometheus + Grafana metrics from ragpipe, ragstuffer, and ragprobe |
-| [ragdeck](https://github.com/aclater/ragdeck) | Admin UI — single-pane management for collections, ingest, query log, probe runs, and metrics |
-| [framework-ai-stack](https://github.com/aclater/framework-ai-stack) | Reference deployment — full local stack on Fedora with Podman quadlets, auto-tuning, and systemd |
+| Repo | What it does | Status |
+|------|-------------|--------|
+| [ragpipe](https://github.com/aclater/ragpipe) | RAG proxy — semantic routing, retrieval, reranking, citation validation, grounding classification | Production |
+| [ragstuffer](https://github.com/aclater/ragstuffer) | Document ingestion — polls Google Drive, git repos, and web URLs; extracts, chunks, embeds, indexes | Production |
+| [ragprobe](https://github.com/aclater/ragprobe) | Adversarial testing — 66+ tests across 13 categories for grounding quality, citation accuracy, and safety | Production |
+| [ragwatch](https://github.com/aclater/ragwatch) | Observability — scrapes Prometheus metrics from ragpipe and ragstuffer, exposes /metrics and /metrics/summary | Production |
+| [ragdeck](https://github.com/aclater/ragdeck) | Admin UI — single-pane management for collections, ingest, query log, probe runs, and metrics | Scaffold (health endpoint only) |
+| [framework-ai-stack](https://github.com/aclater/framework-ai-stack) | Reference deployment — full local stack on Fedora with Podman quadlets, auto-tuning, and systemd | Production |
+| [rag-suite](https://github.com/aclater/rag-suite) | This repo — component documentation and shared Postgres migrations | Documentation |
+
+## Architecture
+
+rag-suite implements a **semantic router** that classifies incoming queries and routes them to different Qdrant collections (personnel, nato, mpep, documents), each with isolated retrieval pipelines.
+
+```
+Client → Open WebUI (:3000) → LiteLLM (:4000) → ragpipe (:8090)
+                                                    │
+                                    ┌───────────────┴───────────────┐
+                                    │   Semantic Router (cosine sim) │
+                                    └───────────────┬───────────────┘
+                              ┌───────────────┼───────────────┐
+                              ▼               ▼               ▼
+                        personnel          nato              mpep
+                        (Qdrant)         (Qdrant)         (Qdrant)
+                              │               │               │
+                              └───────────────┼───────────────┘
+                                            ▼
+                                     Postgres (:5432)
+                                chunks + titles + query_log
+                                            │
+                          ┌─────────────────┼─────────────────┐
+                          ▼                 ▼                 ▼
+                    ragstuffer          ragwatch           ragdeck
+                    (:8091)            (:9090)            (:8095)
+                    (ingestion)        (metrics)          (admin UI)
+```
+
+### Data flows
+
+- **Queries**: Client → Open WebUI → LiteLLM → ragpipe → Qdrant (per-route collection) → Postgres (chunk hydration with titles) → ragpipe → LLM → response + rag_metadata
+- **Ingestion**: Google Drive / git / web → ragstuffer → Qdrant (vectors) + Postgres (chunks + titles)
+- **Metrics**: ragpipe → ragwatch (:9090) ← ragstuffer ← Prometheus scraping
+- **Query log**: ragpipe → Postgres `query_log` (partitioned by day)
+- **Admin**: ragdeck → all services via API
+
+### Title extraction
+
+ragstuffer extracts titles per source type and stores them alongside chunk metadata in Postgres. ragpipe surfaces titles in `rag_metadata.cited_chunks[].title`:
+
+| Source | Title source |
+|--------|-------------|
+| PDF | PDF metadata Title, or filename |
+| DOCX/PPTX | Office document title, or filename |
+| git/Markdown | First `# Heading` in file, or filename |
+| Web | `<title>` tag, or URL path |
 
 ## How they fit together
 
@@ -24,7 +71,9 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 - **Grounding classification** — every response is classified as `corpus`, `general`, or `mixed`, available in `rag_metadata` for downstream consumers.
 - **Text-free audit logging** — grounding decisions are logged without echoing document text or user queries, safe for compliance-sensitive environments.
 - **Separation of concerns** — ingestion, retrieval, inference, and testing are independent services. Swap any component without touching the others.
-- **Semantic routing** — ragpipe classifies queries and routes them to different LLMs, vector collections, and document stores per routing domain. A medical corpus and a finance corpus can share the same endpoint with separate retrieval pipelines.
+- **Semantic routing** — ragpipe classifies queries and routes them to different Qdrant collections, LLMs, and document stores per routing domain. A medical corpus and a finance corpus can share the same endpoint with separate retrieval pipelines.
+- **Multi-collection isolation** — each collection (personnel, nato, mpep) is a separate retrieval domain with its own vectors, chunks, and titles.
+- **Hot-reload configuration** — system prompt and routes can be reloaded without restarting ragpipe via admin endpoints.
 
 ## Quick start
 
@@ -36,7 +85,7 @@ cd framework-ai-stack
 ./llm-stack.sh setup    # auto-tunes for your hardware, pulls model, starts services
 ```
 
-This brings up Postgres, Qdrant, ramalama (model serving), ragpipe, LiteLLM, Open WebUI, and ragstuffer as rootless Podman containers managed by systemd quadlets.
+This brings up Postgres, Qdrant, ramalama (model serving), ragpipe, LiteLLM, Open WebUI, ragstuffer, and ragwatch as rootless Podman containers managed by systemd quadlets.
 
 To run the components individually, see each repo's README.
 
@@ -61,9 +110,10 @@ all services. See [migrations/README.md](migrations/README.md) for details.
 
 | Table | Purpose | Owner |
 |---|---|---|
-| `chunks` | Document chunk text (created by ragstuffer, read by ragpipe) | ragstuffer / ragpipe |
-| `collections` | Authoritative collection registry | All services |
-| `query_log` | Query observability, partitioned by day | ragpipe (writes) |
+| `chunks` | Document chunk text + title metadata (created by ragstuffer, read by ragpipe) | ragstuffer / ragpipe |
+| `collections` | Authoritative collection registry with source_type | All services |
+| `query_log` | Query observability, partitioned by day (20260405, 20260406, ...) | ragpipe (writes) |
+| `LiteLLM_*` | LiteLLM proxy state and guardrail metrics | litellm |
 
 ### Running migrations
 
@@ -75,13 +125,15 @@ bash migrations/run_migrations.sh
 
 ## Tech stack
 
-- **Runtime**: Python (ragpipe, ragstuffer), Node.js (ragprobe), Bash (framework-ai-stack)
-- **Embedding**: ONNX Runtime (bge-base-en-v1.5), no fastembed — 708 MB RSS
-- **Reranking**: ONNX Runtime (MiniLM-L-6-v2 cross-encoder)
-- **Vector DB**: Qdrant with int8 scalar quantization (reference payloads only)
-- **Document store**: PostgreSQL (full chunk text, asyncpg pool)
+- **Runtime**: Python (ragpipe, ragstuffer, ragwatch), Node.js (ragprobe), Bash (framework-ai-stack)
+- **Embedding**: ONNX Runtime (gte-modernbert-base), no fastembed — 708 MB RSS
+- **Reranking**: ONNX Runtime (MiniLM-L-6-v2 cross-encoder, CPU-only on gfx1151)
+- **Vector DB**: Qdrant v1.17.1 with int8 scalar quantization (reference payloads only)
+- **Document store**: PostgreSQL 16 (full chunk text + titles, asyncpg pool)
+- **GPU inference**: MIGraphXExecutionProvider (AMD ROCm 7.x, gfx1151) — ~3 min startup
 - **Containers**: Rootless Podman, systemd quadlets, UBI base images, SELinux enforcing
 - **Testing**: promptfoo with custom Python assertions, pytest
+- **Observability**: Prometheus metrics from ragpipe/ragstuffer, aggregated by ragwatch
 
 ## License
 
