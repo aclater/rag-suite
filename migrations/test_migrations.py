@@ -352,4 +352,5 @@ def test_migration_order():
         "002_query_log.sql",
         "003_create_partitions.sql",
         "004_collections_source_types.sql",
+        "005_chunks_created_at_timestamptz.sql",
     ]
