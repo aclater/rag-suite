@@ -339,10 +339,96 @@ def test_gin_index_exists(migrated_db):
     assert cur.fetchone()[0] is True
 
 
+# -- probe_results table (006_ragas_probe_results.sql) --
+
+def test_probe_results_table_exists(migrated_db):
+    cur = migrated_db.cursor()
+    cur.execute(
+        "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+        "WHERE table_schema = 'public' AND table_name = 'probe_results')"
+    )
+    assert cur.fetchone()[0] is True
+
+
+def test_probe_results_columns(migrated_db):
+    cur = migrated_db.cursor()
+    cur.execute(
+        "SELECT column_name, data_type FROM information_schema.columns "
+        "WHERE table_name = 'probe_results' ORDER BY ordinal_position"
+    )
+    cols = {row[0]: row[1] for row in cur.fetchall()}
+    assert cols["id"] == "integer"
+    assert cols["eval_run_id"] == "text"
+    assert cols["eval_run_at"] == "timestamp with time zone"
+    assert cols["target"] == "text"
+    assert cols["ragpipe_version"] == "text"
+    assert cols["model"] == "text"
+    assert cols["question"] == "text"
+    assert cols["ground_truth"] == "text"
+    assert cols["answer"] == "text"
+    assert cols["context_chunks"] == "jsonb"
+    assert cols["faithfulness"] == "real"
+    assert cols["answer_relevance"] == "real"
+    assert cols["context_precision"] == "real"
+    assert cols["context_recall"] == "real"
+    assert cols["routing"] == "text"
+
+
+def test_probe_results_indexes(migrated_db):
+    cur = migrated_db.cursor()
+    cur.execute(
+        "SELECT indexname FROM pg_indexes "
+        "WHERE tablename = 'probe_results' AND indexname LIKE 'idx_probe_results_%'"
+    )
+    indexes = {row[0] for row in cur.fetchall()}
+    assert "idx_probe_results_target" in indexes
+    assert "idx_probe_results_eval_run" in indexes
+    assert "idx_probe_results_eval_at" in indexes
+    assert "idx_probe_results_routing" in indexes
+
+
+def test_probe_results_insert_and_read(migrated_db):
+    cur = migrated_db.cursor()
+    import json
+    eval_run_id = str(uuid.uuid4())
+    chunks = json.dumps([{"id": "doc1:0", "title": "Test Doc"}])
+    cur.execute(
+        "INSERT INTO probe_results ("
+        "  eval_run_id, target, ragpipe_version, model, question, ground_truth, "
+        "  answer, context_chunks, faithfulness, answer_relevance, context_precision, context_recall, routing"
+        ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+        "RETURNING id",
+        (
+            eval_run_id,
+            "test-target",
+            "abc123",
+            "qwen3.5",
+            "What is patent law?",
+            "Patent law covers inventions.",
+            "Patent law is...",
+            chunks,
+            0.85,
+            0.90,
+            0.75,
+            0.80,
+            "lookup",
+        ),
+    )
+    row_id = cur.fetchone()[0]
+    cur.execute(
+        "SELECT question, faithfulness, routing FROM probe_results WHERE id = %s",
+        (row_id,),
+    )
+    row = cur.fetchone()
+    assert row[0] == "What is patent law?"
+    assert row[1] == 0.85
+    assert row[2] == "lookup"
+
+
 # -- Migration ordering --
 
 def test_migration_order():
-    """Migration files must exist in numeric order 001, 002, 003, 004."""
+    """Migration files must exist in numeric order 001, 002, 003, 004, 005, 006."""
     files = sorted(
         f for f in os.listdir(MIGRATIONS_DIR)
         if f.endswith(".sql") and f[0].isdigit()
@@ -353,4 +439,5 @@ def test_migration_order():
         "003_create_partitions.sql",
         "004_collections_source_types.sql",
         "005_chunks_created_at_timestamptz.sql",
+        "006_ragas_probe_results.sql",
     ]
