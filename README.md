@@ -8,9 +8,9 @@ A modular, corpus-preferring RAG stack. Documents go in, grounded answers come o
 |------|-------------|--------|
 | [ragpipe](https://github.com/aclater/ragpipe) | RAG proxy — semantic routing, retrieval, reranking, citation validation, grounding classification | Production |
 | [ragstuffer](https://github.com/aclater/ragstuffer) | Document ingestion — polls Google Drive, git repos, and web URLs; extracts, chunks, embeds, indexes | Production |
-| [ragprobe](https://github.com/aclater/ragprobe) | Adversarial testing — 66+ tests across 13 categories for grounding quality, citation accuracy, and safety | Production |
+| [ragprobe](https://github.com/aclater/ragprobe) | Adversarial testing + Ragas evaluation — 66+ tests across 13 categories + quantitative RAG quality metrics | Production |
 | [ragwatch](https://github.com/aclater/ragwatch) | Observability — scrapes Prometheus metrics from ragpipe and ragstuffer, exposes /metrics and /metrics/summary | Production |
-| [ragdeck](https://github.com/aclater/ragdeck) | Admin UI — single-pane management for collections, ingest, query log, probe runs, and metrics | Scaffold (health endpoint only) |
+| [ragdeck](https://github.com/aclater/ragdeck) | Admin UI — single-pane management for collections, ingest, query log, probe runs, and metrics | Production |
 | [framework-ai-stack](https://github.com/aclater/framework-ai-stack) | Reference deployment — full local stack on Fedora with Podman quadlets, auto-tuning, and systemd | Production |
 | [rag-suite](https://github.com/aclater/rag-suite) | This repo — component documentation and shared Postgres migrations | Documentation |
 
@@ -37,7 +37,7 @@ Client → Open WebUI (:3000) → LiteLLM (:4000) → ragpipe (:8090)
                           ┌─────────────────┼─────────────────┐
                           ▼                 ▼                 ▼
                     ragstuffer          ragwatch           ragdeck
-                    (:8091)            (:9090)            (:8095)
+                    (:8091)            (:9090)            (:8092)
                     (ingestion)        (metrics)          (admin UI)
 ```
 
@@ -47,7 +47,8 @@ Client → Open WebUI (:3000) → LiteLLM (:4000) → ragpipe (:8090)
 - **Ingestion**: Google Drive / git / web → ragstuffer → Qdrant (vectors) + Postgres (chunks + titles)
 - **Metrics**: ragpipe → ragwatch (:9090) ← ragstuffer ← Prometheus scraping
 - **Query log**: ragpipe → Postgres `query_log` (partitioned by day)
-- **Admin**: ragdeck → all services via API
+- **Ragas eval**: promptfoo tests → ragprobe → Ragas judge → probe_results table
+- **Admin**: ragdeck (:8092) → all services via API
 
 ### Title extraction
 
@@ -113,6 +114,7 @@ all services. See [migrations/README.md](migrations/README.md) for details.
 | `chunks` | Document chunk text + title metadata (created by ragstuffer, read by ragpipe) | ragstuffer / ragpipe |
 | `collections` | Authoritative collection registry with source_type | All services |
 | `query_log` | Query observability, partitioned by day (20260405, 20260406, ...) | ragpipe (writes) |
+| `probe_results` | Ragas evaluation scores (faithfulness, answer_relevance, context_precision, context_recall) | ragprobe (writes) |
 | `LiteLLM_*` | LiteLLM proxy state and guardrail metrics | litellm |
 
 ### Running migrations
@@ -127,12 +129,13 @@ bash migrations/run_migrations.sh
 
 - **Runtime**: Python (ragpipe, ragstuffer, ragwatch), Node.js (ragprobe), Bash (framework-ai-stack)
 - **Embedding**: ONNX Runtime (gte-modernbert-base), no fastembed — 708 MB RSS
-- **Reranking**: ONNX Runtime (MiniLM-L-6-v2 cross-encoder, CPU-only on gfx1151)
+- **Reranking**: ONNX Runtime (MiniLM-L-6-v2 cross-encoder, CPU-only)
 - **Vector DB**: Qdrant v1.17.1 with int8 scalar quantization (reference payloads only)
 - **Document store**: PostgreSQL 16 (full chunk text + titles, asyncpg pool)
-- **GPU inference**: MIGraphXExecutionProvider (AMD ROCm 7.x, gfx1151) — ~3 min startup
+- **GPU inference**: Vulkan RADV on gfx1151 (llama-vulkan container); CPU for embedder/reranker on gfx1151
+- **MXR cache**: Cold start ~3:53 (first), warm start ~6s (39x improvement) via `ORT_MIGRAPHX_MODEL_CACHE_PATH`
 - **Containers**: Rootless Podman, systemd quadlets, UBI base images, SELinux enforcing
-- **Testing**: promptfoo with custom Python assertions, pytest
+- **Testing**: promptfoo with custom Python assertions, pytest, Ragas evaluation
 - **Observability**: Prometheus metrics from ragpipe/ragstuffer, aggregated by ragwatch
 
 ## License

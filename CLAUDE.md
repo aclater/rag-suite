@@ -32,10 +32,10 @@ Client → Open WebUI (:3000) → LiteLLM (:4000) → ragpipe (:8090)
                                 chunks + titles + query_log
                                             │
                           ┌─────────────────┼─────────────────┐
-                          ▼                 ▼                 ▼
-                    ragstuffer          ragwatch           ragdeck
-                    (:8091)            (:9090)            (:8095)
-                    (ingestion)        (metrics)          (admin UI)
+                           ▼                 ▼                 ▼
+                     ragstuffer          ragwatch           ragdeck
+                     (:8091)            (:9090)            (:8092)
+                     (ingestion)        (metrics)          (admin UI)
 ```
 
 ### Semantic routing
@@ -80,9 +80,10 @@ LiteLLM_*      — LiteLLM proxy state and guardrail metrics
 ## GPU requirements
 
 - **System**: AMD Ryzen AI Max+ 395 (gfx1151) with ROCm 7.x
-- **GPU provider**: MIGraphXExecutionProvider only — ROCMExecutionProvider is ABI-incompatible with ROCm 7.x
+- **LLM inference**: Vulkan RADV via llama-vulkan container (gfx1151 optimized)
+- **Embedder/reranker**: CPU on gfx1151 — MIGraphX tensors land in GTT instead of VRAM on UMA APUs
 - **Required env**: `HSA_OVERRIDE_GFX_VERSION=11.5.1`
-- **⚠️ Startup time**: ragpipe takes ~3 minutes on first query after startup while MIGraphX compiles the inference graph
+- **⚠️ Cold start**: ragpipe takes ~3:53 on first boot. Warm start (MXR cached): ~6 seconds (39x improvement)
 
 ## Hot-reload endpoints
 

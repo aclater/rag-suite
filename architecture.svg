@@ -79,7 +79,7 @@
 
   <!-- Title -->
   <text x="600" y="28" text-anchor="middle" font-size="20" font-weight="bold" class="text">rag-suite architecture</text>
-  <text x="600" y="46" text-anchor="middle" font-size="11" class="text-dim">April 2026 — Modular corpus-preferring RAG stack</text>
+  <text x="600" y="46" text-anchor="middle" font-size="11" class="text-dim">April 2026 — MXR cache, Vulkan RADV, 39x startup improvement</text>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- CLIENT LAYER (top) -->
@@ -150,20 +150,34 @@
   <text x="460" y="402" text-anchor="middle" font-size="10" class="text-dim">:5432</text>
   <text x="460" y="418" text-anchor="middle" font-size="9" class="text-dim">Tables:</text>
   <text x="460" y="432" text-anchor="middle" font-size="9" class="text-dim">chunks | collections | query_log</text>
-  <text x="460" y="446" text-anchor="middle" font-size="9" class="text-dim">chunks + titles (full text)</text>
+  <text x="460" y="442" text-anchor="middle" font-size="9" class="text-dim">probe_results | LiteLLM_*</text>
+  <text x="460" y="454" text-anchor="middle" font-size="9" class="text-dim">chunks + titles (full text)</text>
 
   <!-- Query log partitioning annotation -->
   <rect x="380" y="458" width="160" height="18" class="label-bg" rx="3"/>
   <text x="460" y="471" text-anchor="middle" font-size="8" class="text-dim">query_log partitioned by day</text>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- RAGAS EVAL — ragprobe -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="760" y="460" width="140" height="60" rx="6" fill="#1a3a2f" stroke="#4dff88"/>
+  <text x="830" y="480" text-anchor="middle" font-weight="700" font-size="12" class="text-inference">ragprobe</text>
+  <text x="830" y="494" text-anchor="middle" font-size="9" class="text-dim">promptfoo tests</text>
+  <text x="830" y="506" text-anchor="middle" font-size="9" class="text-dim">→ Ragas eval</text>
+
+  <!-- ragprobe → probe_results -->
+  <line x1="830" y1="520" x2="540" y2="520" class="arrow-inference" stroke-width="1.5" marker-end="url(#aii)"/>
+  <rect x="660" y="504" width="100" height="14" class="label-bg" rx="3"/>
+  <text x="710" y="514" text-anchor="middle" font-size="8" class="text-dim">probe_results</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- LLM -->
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <rect x="884" y="240" width="140" height="72" rx="6" class="box-client"/>
-  <text x="954" y="262" text-anchor="middle" font-weight="700" font-size="13" class="text-client">ramalama</text>
+  <text x="954" y="262" text-anchor="middle" font-weight="700" font-size="13" class="text-client">llama-vulkan</text>
   <text x="954" y="278" text-anchor="middle" font-size="10" class="text-dim">:8080 — Qwen3.5-35B</text>
-  <text x="954" y="294" text-anchor="middle" font-size="9" class="text-dim">MIGraphX / ROCm 7.x</text>
-  <text x="954" y="306" text-anchor="middle" font-size="9" class="text-dim">gfx1151 — ~3 min startup</text>
+  <text x="954" y="294" text-anchor="middle" font-size="9" class="text-dim">Vulkan RADV / gfx1151</text>
+  <text x="954" y="306" text-anchor="middle" font-size="9" class="text-dim">Cold ~3:53 / Warm ~6s (MXR cache)</text>
 
   <!-- Response path -->
   <line x1="954" y1="312" x2="954" y2="500" class="arrow-client" stroke-width="1" stroke-dasharray="4,2"/>
@@ -176,31 +190,39 @@
   <!-- INGESTION LAYER — ragstuffer -->
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <rect x="380" y="530" width="440" height="100" rx="8" class="box-ingestion"/>
-  <text x="600" y="552" text-anchor="middle" font-weight="700" font-size="15" class="text-ingestion">ragstuffer</text>
-  <text x="600" y="568" text-anchor="middle" font-size="10" class="text-dim">:8091 — Document ingestion, polls Drive / git / web</text>
+  <text x="510" y="548" text-anchor="middle" font-weight="700" font-size="13" class="text-ingestion">ragstuffer</text>
+  <text x="510" y="562" text-anchor="middle" font-size="9" class="text-dim">:8091 — Drive / git / web</text>
+  <text x="510" y="576" text-anchor="middle" font-size="9" class="text-dim">personnel, nato, documents</text>
 
-  <!-- Source icons -->
-  <text x="420" y="586" font-size="9" class="text-dim">Google Drive</text>
-  <text x="500" y="586" font-size="9" class="text-dim">|</text>
-  <text x="520" y="586" font-size="9" class="text-dim">git repos</text>
-  <text x="590" y="586" font-size="9" class="text-dim">|</text>
-  <text x="620" y="586" font-size="9" class="text-dim">web URLs</text>
+  <text x="670" y="548" text-anchor="middle" font-weight="700" font-size="13" class="text-ingestion">ragstuffer-mpep</text>
+  <text x="670" y="562" text-anchor="middle" font-size="9" class="text-dim">:8093 — USPTO/MPEP</text>
+  <text x="670" y="576" text-anchor="middle" font-size="9" class="text-dim">mpep collection</text>
 
   <!-- Title extraction badge -->
-  <rect x="680" y="574" width="120" height="18" rx="4" fill="none" stroke="#4da6ff" stroke-width="1"/>
-  <text x="740" y="587" text-anchor="middle" font-size="9" class="text-ingestion">+ title extraction</text>
+  <rect x="740" y="590" width="70" height="16" rx="4" fill="none" stroke="#4da6ff" stroke-width="1"/>
+  <text x="775" y="601" text-anchor="middle" font-size="8" class="text-ingestion">+ title</text>
+
+  <!-- Source icons -->
+  <text x="400" y="592" font-size="9" class="text-dim">Google Drive</text>
+  <text x="480" y="592" font-size="9" class="text-dim">|</text>
+  <text x="500" y="592" font-size="9" class="text-dim">git repos</text>
+  <text x="570" y="592" font-size="9" class="text-dim">|</text>
+  <text x="600" y="592" font-size="9" class="text-dim">web URLs</text>
 
   <!-- ragstuffer outputs -->
-  <line x1="460" y1="574" x2="460" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
-  <line x1="600" y1="574" x2="600" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
-  <line x1="740" y1="574" x2="740" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
+  <line x1="440" y1="590" x2="440" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
+  <line x1="510" y1="590" x2="510" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
+  <line x1="600" y1="590" x2="600" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
+  <line x1="670" y1="590" x2="670" y2="630" class="arrow-ingestion" stroke-width="1.5" marker-end="url(#ai)"/>
 
-  <rect x="400" y="614" width="60" height="14" class="label-bg" rx="3"/>
-  <text x="430" y="624" text-anchor="middle" font-size="8" class="text-dim">chunks+titles</text>
-  <rect x="570" y="614" width="60" height="14" class="label-bg" rx="3"/>
-  <text x="600" y="624" text-anchor="middle" font-size="8" class="text-dim">vectors</text>
-  <rect x="710" y="614" width="60" height="14" class="label-bg" rx="3"/>
-  <text x="740" y="624" text-anchor="middle" font-size="8" class="text-dim">metadata</text>
+  <rect x="390" y="614" width="50" height="14" class="label-bg" rx="3"/>
+  <text x="415" y="624" text-anchor="middle" font-size="8" class="text-dim">chunks</text>
+  <rect x="460" y="614" width="50" height="14" class="label-bg" rx="3"/>
+  <text x="485" y="624" text-anchor="middle" font-size="8" class="text-dim">vectors</text>
+  <rect x="560" y="614" width="50" height="14" class="label-bg" rx="3"/>
+  <text x="585" y="624" text-anchor="middle" font-size="8" class="text-dim">chunks</text>
+  <rect x="630" y="614" width="50" height="14" class="label-bg" rx="3"/>
+  <text x="655" y="624" text-anchor="middle" font-size="8" class="text-dim">vectors</text>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- OBSERVABILITY — ragwatch -->
@@ -223,11 +245,10 @@
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <rect x="40" y="530" width="180" height="100" rx="8" class="box-admin"/>
   <text x="130" y="552" text-anchor="middle" font-weight="700" font-size="15" class="text-admin">ragdeck</text>
-  <text x="130" y="568" text-anchor="middle" font-size="10" class="text-dim">:8095 — Admin UI (scaffold)</text>
-  <text x="130" y="584" text-anchor="middle" font-size="9" class="text-dim">currently: /health only</text>
-  <text x="130" y="600" text-anchor="middle" font-size="9" class="text-dim">planned:</text>
-  <text x="130" y="612" text-anchor="middle" font-size="9" class="text-dim">collections | ingest | query_log</text>
-  <text x="130" y="624" text-anchor="middle" font-size="9" class="text-dim">probe runs | metrics</text>
+  <text x="130" y="568" text-anchor="middle" font-size="10" class="text-dim">:8092 — Admin UI</text>
+  <text x="130" y="584" text-anchor="middle" font-size="9" class="text-dim">collections | ingest | query_log</text>
+  <text x="130" y="596" text-anchor="middle" font-size="9" class="text-dim">metrics | admin config</text>
+  <text x="130" y="614" text-anchor="middle" font-size="9" class="text-dim">RAGDECK_ADMIN_TOKEN auth</text>
 
   <!-- ragdeck connections -->
   <line x1="220" y1="560" x2="380" y2="276" class="arrow-admin" stroke-width="1" stroke-dasharray="4,2"/>
