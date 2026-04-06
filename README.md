@@ -114,7 +114,7 @@ all services. See [migrations/README.md](migrations/README.md) for details.
 | `chunks` | Document chunk text + title metadata (created by ragstuffer, read by ragpipe) | ragstuffer / ragpipe |
 | `collections` | Authoritative collection registry with source_type | All services |
 | `query_log` | Query observability, partitioned by day (20260405, 20260406, ...) | ragpipe (writes) |
-| `probe_results` | Ragas evaluation scores (faithfulness, answer_relevance, context_precision, context_recall) | ragprobe (writes via shared litellm role) |
+| `probe_results` | Ragas evaluation scores (faithfulness, answer_relevance, context_precision, context_recall) | ragprobe (writes) |
 | `LiteLLM_*` | LiteLLM proxy state and guardrail metrics | litellm |
 
 ### Running migrations
