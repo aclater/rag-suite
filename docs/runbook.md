@@ -60,7 +60,7 @@ curl -X POST http://localhost:8091/ingest/trigger \
 ## View Query Logs in Postgres
 
 ```bash
-psql "postgresql://user:pass@localhost:5432/ragpipe" -c "
+psql "$PGconnstr" -c "
 SELECT created_at, grounding, route, cited_count, latency_ms
 FROM query_log
 WHERE created_at > NOW() - INTERVAL '1 hour'
@@ -70,12 +70,12 @@ LIMIT 50;"
 
 View partitions:
 ```bash
-psql "postgresql://user:pass@localhost:5432/ragpipe" -c "\dt query_log_*"
+psql "$PGconnstr" -c "\dt query_log_*"
 ```
 
 Query a specific partition:
 ```bash
-psql "postgresql://user:pass@localhost:5432/ragpipe" -c "
+psql "$PGconnstr" -c "
 SELECT * FROM query_log_20260407
 WHERE grounding = 'general'
 LIMIT 20;"
@@ -93,7 +93,7 @@ python -m ragprobe --target ragpipe-v1 --model Qwen3-32B
 python scripts/compare_targets.py --eval-run-id <run1> --eval-run-id <run2>
 
 # List available eval runs
-psql "postgresql://user:pass@localhost:5432/ragpipe" -c "
+psql "$PGconnstr" -c "
 SELECT eval_run_id, eval_run_at, target, model, COUNT(*) as questions
 FROM probe_results
 GROUP BY eval_run_id, eval_run_at, target, model
@@ -196,10 +196,21 @@ curl http://localhost:8095/metrics
 
 ## Force CPU Mode (gfx1151 only)
 
-If MIGraphX is causing issues on gfx1151:
+If MIGraphX is causing issues on gfx1151, set the environment variable for the systemd user session and restart:
 ```bash
-RAGPIPE_FORCE_CPU=1 systemctl --user restart ragpipe
+systemctl --user set-environment RAGPIPE_FORCE_CPU=1
+systemctl --user restart ragpipe
+
+# To unset later:
+systemctl --user unset-environment RAGPIPE_FORCE_CPU
+systemctl --user restart ragpipe
 ```
+
+Or edit the service override persistently:
+```bash
+systemctl --user edit ragpipe
+# Add: [Service]
+# Environment="RAGPIPE_FORCE_CPU=1"
 
 ## View Logs
 
