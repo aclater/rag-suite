@@ -427,8 +427,81 @@ def test_probe_results_insert_and_read(migrated_db):
 
 # -- Migration ordering --
 
+# -- Agentic columns (007_query_log_agentic_columns.sql) --
+
+def test_query_log_agentic_columns_exist(migrated_db):
+    """query_log should have CRAG/agentic tracking columns after migration 007."""
+    cur = migrated_db.cursor()
+    cur.execute(
+        "SELECT column_name, data_type FROM information_schema.columns "
+        "WHERE table_name = 'query_log' AND column_name IN "
+        "('query_rewritten', 'retrieval_attempts', 'original_query', 'rewritten_query') "
+        "ORDER BY column_name"
+    )
+    cols = {row[0]: row[1] for row in cur.fetchall()}
+    assert cols["query_rewritten"] == "boolean"
+    assert cols["retrieval_attempts"] == "integer"
+    assert cols["original_query"] == "text"
+    assert cols["rewritten_query"] == "text"
+
+
+def test_query_log_agentic_defaults(migrated_db):
+    """New rows should get sensible defaults for agentic columns."""
+    cur = migrated_db.cursor()
+    cur.execute(
+        "INSERT INTO query_log (query_text, query_hash, grounding, total_chunks) "
+        "VALUES (%s, %s, %s, %s) RETURNING id",
+        ("test defaults", "hash-defaults", "corpus", 5),
+    )
+    row_id = cur.fetchone()[0]
+    cur.execute(
+        "SELECT query_rewritten, retrieval_attempts, original_query, rewritten_query "
+        "FROM query_log WHERE id = %s",
+        (row_id,),
+    )
+    row = cur.fetchone()
+    assert row[0] is False  # query_rewritten default
+    assert row[1] == 1  # retrieval_attempts default
+    assert row[2] is None  # original_query nullable
+    assert row[3] is None  # rewritten_query nullable
+
+
+def test_query_log_agentic_insert_with_rewrite(migrated_db):
+    """Writing CRAG metadata to query_log should work."""
+    cur = migrated_db.cursor()
+    cur.execute(
+        "INSERT INTO query_log ("
+        "  query_text, query_hash, grounding, total_chunks, "
+        "  query_rewritten, retrieval_attempts, original_query, rewritten_query"
+        ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+        (
+            "patent claims software",
+            "hash-crag",
+            "corpus",
+            10,
+            True,
+            2,
+            "patent claims software",
+            "What are the requirements for software patent claims under MPEP?",
+        ),
+    )
+    row_id = cur.fetchone()[0]
+    cur.execute(
+        "SELECT query_rewritten, retrieval_attempts, original_query, rewritten_query "
+        "FROM query_log WHERE id = %s",
+        (row_id,),
+    )
+    row = cur.fetchone()
+    assert row[0] is True
+    assert row[1] == 2
+    assert row[2] == "patent claims software"
+    assert "software patent claims" in row[3].lower()
+
+
+# -- Migration ordering --
+
 def test_migration_order():
-    """Migration files must exist in numeric order 001, 002, 003, 004, 005, 006."""
+    """Migration files must exist in numeric order 001 through 007."""
     files = sorted(
         f for f in os.listdir(MIGRATIONS_DIR)
         if f.endswith(".sql") and f[0].isdigit()
@@ -440,4 +513,5 @@ def test_migration_order():
         "004_collections_source_types.sql",
         "005_chunks_created_at_timestamptz.sql",
         "006_ragas_probe_results.sql",
+        "007_query_log_agentic_columns.sql",
     ]
