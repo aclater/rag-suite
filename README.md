@@ -1,3 +1,5 @@
+> **Archived on 2026-10-15.** This repo is part of the original RAG suite (April 2026) and is no longer maintained. It has been superseded by a rebuild: **[aclater/rag](https://github.com/aclater/rag)**.
+
 # RAG Suite
 
 A modular, corpus-preferring RAG stack. Documents go in, grounded answers come out, hallucinations get caught.
